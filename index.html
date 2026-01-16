@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Love Animation 💗| Aoudumber Bade</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --pink: #FF69BE;
+      --red:  #FF0000;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(12, 12, 12, 0.2);
+    }
+
+    /* الرسالة (Responsive + Safe area للآيفون) */
+    #love-message {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 75px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+
+      font-family: 'Dancing Script', cursive;
+      font-style: italic;
+      text-align: center;
+
+      /* حجم مرن */
+      font-size: clamp(24px, 6.2vw, 56px);
+
+      /* تباعد مرن بدل px */
+      letter-spacing: 0.16em;
+      line-height: 1.15;
+
+      /* يخلي الكلام يلف بشكل مرتب على الجوال */
+      width: min(92vw, 760px);
+      user-select: none;
+      pointer-events: none;
+    }
+
+    #love-message span {
+      display: inline-block;
+      animation: jump 4s infinite, colorChange 4s infinite;
+      will-change: transform, color;
+    }
+
+    @keyframes jump {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-18px); }
+      100% { transform: translateY(0); }
+    }
+
+    @keyframes colorChange {
+      0% { color: var(--pink); }
+      50% { color: var(--red); }
+      100% { color: var(--pink); }
+    }
+
+    /* بدل ما نكتب 15 سطر: نخلي التأخير يطلع من CSS variable */
+    #love-message span { animation-delay: calc(var(--i) * 0.08s); }
+
+    #copy {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1rem;
+      z-index: 3;
+    }
+
+    #copy a {
+      text-decoration: none;
+      color: #ff005ed7;
+      animation: colorChange 4s infinite;
+    }
+
+    #copy p {
+      color: #fff6f9;
+      text-align: center;
+      font-weight: 700;
+      cursor: pointer;
+      animation: colorChange 4s infinite;
+      margin: 0;
+    }
+
+    @media (max-width: 658px) {
+      #love-message {
+        top: calc(env(safe-area-inset-top, 0px) + 14px);
+        font-size: clamp(22px, 7vw, 44px);
+        letter-spacing: 0.12em;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="love-message" aria-label="love message"></div>
+
+  <canvas id="heart"></canvas>
+
+  <div id="copy">
+    <p class="text-center text-white text-sm">
+      <a href="https://www.instagram.com/aoudumber.dev/reels/#"></a>
+    </p>
+  </div>
+
+  <script>
+    // ====== نص واحد للتحكم بكل شيء ======
+    const TOP_TEXT = "I Love  you  YARA ❤";
+    const CANVAS_TEXT = "I Love  you  YARA";
+
+
+    // ====== بناء النص العلوي كـ spans تلقائيًا (بدون وجع راس) ======
+    (function buildTopText() {
+      const el = document.getElementById("love-message");
+      el.innerHTML = "";
+      [...TOP_TEXT].forEach((ch, idx) => {
+        const s = document.createElement("span");
+        s.textContent = ch;
+        s.style.setProperty("--i", idx);
+        el.appendChild(s);
+      });
+    })();
+
+    window.requestAnimationFrame =
+      window.__requestAnimationFrame ||
+      window.requestAnimationFrame ||
+      window.webkitRequestAnimationFrame ||
+      window.mozRequestAnimationFrame ||
+      window.oRequestAnimationFrame ||
+      window.msRequestAnimationFrame ||
+      (function () {
+        return function (callback, element) {
+          var lastTime = element.__lastTime || 0;
+          var currTime = Date.now();
+          var timeToCall = Math.max(1, 33 - (currTime - lastTime));
+          window.setTimeout(callback, timeToCall);
+          element.__lastTime = currTime + timeToCall;
+        };
+      })();
+
+    window.isDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+      (navigator.userAgent || navigator.vendor || window.opera).toLowerCase()
+    );
+
+    var loaded = false;
+
+    var init = function () {
+      if (loaded) return;
+      loaded = true;
+
+      var mobile = window.isDevice;
+      var canvas = document.getElementById("heart");
+      var ctx = canvas.getContext("2d");
+      var rand = Math.random;
+
+      var baseWidth = 1920;
+      var baseHeight = 1080;
+
+      // ✅ Canvas واضح على الموبايل (DPR)
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      var updateCanvasSize = function () {
+        canvas.style.width = innerWidth + "px";
+        canvas.style.height = innerHeight + "px";
+
+        canvas.width = Math.floor(innerWidth * dpr);
+        canvas.height = Math.floor(innerHeight * dpr);
+
+        // نخلي الإحداثيات بوحدات CSS
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        var width = innerWidth;
+        var height = innerHeight;
+
+        var scale = Math.min(width / baseWidth, height / baseHeight);
+
+        ctx.fillStyle = "rgba(0,0,0,1)";
+        ctx.fillRect(0, 0, width, height);
+
+        return { width, height, scale };
+      };
+
+      var size = updateCanvasSize();
+      var width = size.width;
+      var height = size.height;
+      var scale = size.scale;
+
+      var drawText = function (opacity) {
+        ctx.font = `${Math.max(26, 90 * scale)}px Arial`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(CANVAS_TEXT, width / 2, height / 2);
+      };
+
+      var heartPosition = function (rad) {
+        return [
+          Math.pow(Math.sin(rad), 3),
+          -(
+            15 * Math.cos(rad) -
+            5 * Math.cos(2 * rad) -
+            2 * Math.cos(3 * rad) -
+            Math.cos(4 * rad)
+          ),
+        ];
+      };
+
+      var scaleAndTranslate = function (pos, sx, sy, dx, dy) {
+        return [dx + pos[0] * sx, dy + pos[1] * sy];
+      };
+
+      var updatePointsOrigin = function () {
+        var pointsOrigin = [];
+        var dr = mobile ? 0.3 : 0.1;
+
+        for (var i = 0; i < Math.PI * 2; i += dr)
+          pointsOrigin.push(scaleAndTranslate(heartPosition(i), 372 * scale, 23 * scale, 0, 0));
+        for (var i = 0; i < Math.PI * 2; i += dr)
+          pointsOrigin.push(scaleAndTranslate(heartPosition(i), 300 * scale, 18 * scale, 0, 0));
+        for (var i = 0; i < Math.PI * 2; i += dr)
+          pointsOrigin.push(scaleAndTranslate(heartPosition(i), 228 * scale, 13 * scale, 0, 0));
+
+        return pointsOrigin;
+      };
+
+      var pointsOrigin = updatePointsOrigin();
+      var heartPointsCount = pointsOrigin.length;
+      var targetPoints = [];
+
+      var pulse = function (kx, ky) {
+        for (var i = 0; i < pointsOrigin.length; i++) {
+          targetPoints[i] = [
+            kx * pointsOrigin[i][0] + width / 2,
+            ky * pointsOrigin[i][1] + height / 2.2,
+          ];
+        }
+      };
+
+      window.addEventListener("resize", function () {
+        var s = updateCanvasSize();
+        width = s.width;
+        height = s.height;
+        scale = s.scale;
+        pointsOrigin = updatePointsOrigin();
+        heartPointsCount = pointsOrigin.length;
+      });
+
+      var traceCount = mobile ? 20 : 50;
+      var e = [];
+      for (var i = 0; i < heartPointsCount; i++) {
+        var x = rand() * width;
+        var y = rand() * height;
+        e[i] = {
+          vx: 0,
+          vy: 0,
+          R: 2 * scale,
+          speed: (rand() + 5) * scale,
+          q: ~~(rand() * heartPointsCount),
+          D: 2 * (i % 2) - 1,
+          force: 0.2 * rand() + 0.7,
+          trace: Array.from({ length: traceCount }, () => ({ x, y })),
+        };
+      }
+
+      var glowingHearts = [];
+      var interpolateColor = function (t) {
+        var startColor = { r: 255, g: 105, b: 190 };
+        var endColor = { r: 255, g: 0, b: 0 };
+        var r, g, b;
+
+        if (t < 0.5) {
+          r = Math.round(startColor.r + (endColor.r - startColor.r) * (t * 2));
+          g = Math.round(startColor.g + (endColor.g - startColor.g) * (t * 2));
+          b = Math.round(startColor.b + (endColor.b - startColor.b) * (t * 2));
+        } else {
+          t = (t - 0.5) * 2;
+          r = Math.round(endColor.r + (startColor.r - endColor.r) * t);
+          g = Math.round(endColor.g + (endColor.g - startColor.g) * t);
+          b = Math.round(startColor.b + (endColor.b - startColor.b) * t);
+        }
+        return `rgba(${r}, ${g}, ${b}, `;
+      };
+
+      var createGlowingHeart = function () {
+        return {
+          x: rand() * width,
+          y: height + 20 * scale,
+          vy: -(rand() * 4 + 2) * scale,
+          size: (rand() * 15 + 10) * scale,
+          opacity: 1,
+          color: interpolateColor(rand()),
+        };
+      };
+
+      var config = { traceK: 0.4, timeDelta: 0.6 };
+      var time = 0;
+      var colorTime = 0;
+      var colorDuration = 2;
+      var textOpacity = 0;
+      var showText = false;
+      var heartsPassed = 0;
+
+      var loop = function () {
+        var n = -Math.cos(time);
+        pulse((1 + n) * 0.5, (1 + n) * 0.5);
+        time += (Math.sin(time) < 0 ? 9 : n > 0.8 ? 0.2 : 1) * config.timeDelta;
+
+        ctx.fillStyle = "rgba(0,0,0,.1)";
+        ctx.fillRect(0, 0, width, height);
+
+        colorTime += 0.016;
+        var t = (colorTime % colorDuration) / colorDuration;
+        var currentColor = interpolateColor(t);
+
+        for (var i = e.length; i--; ) {
+          var u = e[i];
+          var q = targetPoints[u.q];
+          var dx = u.trace[0].x - q[0];
+          var dy = u.trace[0].y - q[1];
+          var length = Math.sqrt(dx * dx + dy * dy) || 1;
+
+          if (length < 10 * scale) {
+            if (rand() > 0.95) {
+              u.q = ~~(rand() * heartPointsCount);
+            } else {
+              if (rand() > 0.99) u.D *= -1;
+              u.q = (u.q + u.D) % heartPointsCount;
+              if (u.q < 0) u.q += heartPointsCount;
+            }
+          }
+
+          u.vx += (-dx / length) * u.speed;
+          u.vy += (-dy / length) * u.speed;
+          u.trace[0].x += u.vx;
+          u.trace[0].y += u.vy;
+          u.vx *= u.force;
+          u.vy *= u.force;
+
+          for (var k = 0; k < u.trace.length - 1; k++) {
+            var T = u.trace[k];
+            var N = u.trace[k + 1];
+            N.x -= config.traceK * (N.x - T.x);
+            N.y -= config.traceK * (N.y - T.y);
+          }
+
+          ctx.fillStyle = currentColor + "0.7)";
+          u.trace.forEach((pt) => ctx.fillRect(pt.x, pt.y, 2 * scale, 2 * scale));
+        }
+
+        if (rand() > 0.7) glowingHearts.push(createGlowingHeart());
+
+        for (var i = glowingHearts.length - 1; i >= 0; i--) {
+          var h = glowingHearts[i];
+          h.y += h.vy;
+          h.opacity -= 0.01;
+
+          var gradient = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, h.size);
+          gradient.addColorStop(0, h.color + h.opacity + ")");
+          gradient.addColorStop(1, h.color + "0)");
+          ctx.fillStyle = gradient;
+
+          ctx.beginPath();
+          for (var rad = 0; rad < Math.PI * 2; rad += 0.1) {
+            var p = heartPosition(rad);
+            var xy = scaleAndTranslate([p[0], p[1]], h.size / 2, h.size / 2, h.x, h.y);
+            if (rad === 0) ctx.moveTo(xy[0], xy[1]);
+            else ctx.lineTo(xy[0], xy[1]);
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          if (h.y < -h.size) {
+            heartsPassed++;
+            if (heartsPassed >= 5) showText = true;
+            glowingHearts.splice(i, 1);
+          } else if (h.opacity <= 0) {
+            glowingHearts.splice(i, 1);
+          }
+        }
+
+        if (showText) {
+          textOpacity = Math.min(textOpacity + 0.05, 1);
+          drawText(textOpacity);
+        }
+
+        window.requestAnimationFrame(loop, canvas);
+      };
+
+      loop();
+    };
+
+    var s = document.readyState;
+    if (s === "complete" || s === "loaded" || s === "interactive") init();
+    else document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
